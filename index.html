@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>QueryTool v5.2</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@500;700;900&family=VT323&family=Lora:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div id="appLoadingOverlay">
+  <div class="qt-spinner"></div>
+  <div class="qt-loading-label">Loading QueryTool</div>
+  <div class="qt-loading-sub">Restoring clients, formats &amp; registries&#8230;</div>
+</div>
+
+<header class="top-header">
+  <div class="th-brand">
+    <div class="logo-mark"></div>
+    <div>
+      <div class="logo-text">QUERYTOOL</div>
+      <div class="logo-ver">V5.2 // MULTI-THEME</div>
+    </div>
+  </div>
+  <div class="th-center">
+    <div class="status-dot"></div>
+    <span class="status-label">SYS_READY</span>
+  </div>
+  <div class="th-right">
+    <div class="th-tagline">CREATED BY <span>CHANDU TELAGAMSETTI</span></div>
+  </div>
+</header>
+
+<div class="app-row">
+<nav class="sidebar">
+  <div class="sb-section">Tools</div>
+  <div class="nav-item active" id="nav-tool" onclick="switchPage('tool')"><span class="nav-icon">&#9658;</span>Script Tool</div>
+  <div class="nav-item" id="nav-val" onclick="switchPage('val')"><span class="nav-icon">&#9672;</span>Validator</div>
+  <div class="nav-item" id="nav-bulk" onclick="switchPage('bulk')"><span class="nav-icon">&#9647;</span>Bulk Upload</div>
+  <div class="sb-divider"></div>
+  <div class="sb-section">Config</div>
+  <div class="nav-item" id="nav-fqdn" onclick="switchPage('fqdn')"><span class="nav-icon">&#9676;</span>FQDN Registry</div>
+  <div class="nav-item" id="nav-clients" onclick="switchPage('clients')"><span class="nav-icon">&#9673;</span>Client Registry</div>
+  <div class="sb-divider"></div>
+  <div class="sb-theme-row">
+    <div class="sb-theme-label"><span>Appearance</span></div>
+    <div class="theme-select-wrap">
+      <div class="theme-dot-preview" id="themeDotPreview"></div>
+      <select class="theme-select" id="themeSelect" onchange="applyTheme(this.value)"></select>
+    </div>
+  </div>
+  <div class="sb-hist-row">
+    <button class="hist-btn" onclick="showHistory()">&#128338; Session History</button>
+  </div>
+  <div class="sb-footer">
+    <div class="kv"><span class="kv-key">FQDN</span><span class="kv-val">&#8594; 4 slots</span></div>
+    <div class="kv"><span class="kv-key">PLAIN</span><span class="kv-val">&#8594; 2 slots</span></div>
+    <div class="kv"><span class="kv-key">IP</span><span class="kv-val">&#8594; 1 slot</span></div>
+    <div class="shortcuts">ALT+G &nbsp;Generate<br>ALT+1-4 &nbsp;Tab<br>ALT+C &nbsp;Copy<br>CTRL+&#8629; &nbsp;Run</div>
+  </div>
+</nav>
+
+<main class="main">
+
+<!-- SCRIPT TOOL -->
+<div class="page active" id="page-tool">
+  <div class="page-header">
+    <div class="ph-icon ph-icon-gen">GEN</div>
+    <div><div class="ph-title ph-title-gen">Script Tool</div><div class="ph-sub">// GENERATE &middot; VALIDATE &middot; FIX</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Generator Config</div>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Client Name</div><select id="g-client"><option value="" disabled selected>&#8212; SELECT CLIENT &#8212;</option></select></div>
+      <div class="form-group"><div class="form-label">Max Slots / Query</div><select id="g-max-slots"><option value="10" selected>10 Slots</option><option value="20">20 Slots</option><option value="30">30 Slots</option><option value="40">40 Slots</option><option value="50">50 Slots</option></select></div>
+      <div class="form-group"><div class="form-label">Field Lock</div><div class="field-locked"><span>&#128274;</span>External id</div></div>
+    </div>
+    <div class="form-row" style="grid-template-columns:1fr 1fr;gap:14px;margin-bottom:0;">
+      <div class="form-group">
+        <div class="form-label">Query Format</div>
+        <select id="g-format-select" style="font-size:11px;"></select>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Format Preview</div>
+        <div id="g-format-preview" style="font:10px/1.6 var(--mono);color:var(--text3);padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);word-break:break-all;min-height:34px;"></div>
+      </div>
+    </div>
+    <div class="form-row" id="g-desc-row" style="grid-template-columns:1fr;gap:14px;margin-bottom:0;display:none;">
+      <div class="form-group" id="g-desc-group">
+        <div class="form-label">Description Filter <span style="color:var(--text4)">(suppresses alerts matching both Source &amp; Description)</span></div>
+        <input type="text" id="g-description" placeholder="e.g. Disk space warning" oninput="updateFormatPreview()"/>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:0">
+      <div class="form-label">Hostnames / IPs &#8212; one per line</div>
+      <textarea id="g-input" class="with-preview" rows="7" placeholder="WORKSTATION-01&#10;192.168.1.100&#10;server.corp.local.com"></textarea>
+      <div class="live-analysis">
+        <div class="live-meter-bar">
+          <div class="live-stat">QUERIES EST <span id="lp-queries">0</span></div>
+          <div class="live-stat">SLOTS <span id="lp-slots">0</span></div>
+        </div>
+        <div class="token-container" id="lp-tokens"><span style="color:var(--text4);font-size:10px">Awaiting input...</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="fqdn-row">
+    <span class="fqdn-label">FQDN SUFFIX <span style="color:var(--text4)">(optional)</span></span>
+    <select id="g-fqdn-select" style="flex:1;min-width:140px;max-width:210px;font-size:11px;padding:6px 26px 6px 10px;" onchange="onFqdnSelectChange()"><option value="">&#8212; None &#8212;</option></select>
+    <span style="font:500 10px var(--mono);color:var(--text3)">OR</span>
+    <input type="text" id="g-fqdn-custom" placeholder=".corp.local.com" style="flex:1;min-width:150px;max-width:210px;padding:6px 10px;font-size:11px;" oninput="onFqdnCustomInput()"/>
+  </div>
+  <div id="fqdn-hint" style="font:500 10px var(--mono);color:var(--text3);padding:5px 0 10px;line-height:1.8;display:none;">
+    &#128274; <span style="color:var(--cyan)">FQDN detected</span> — hostnames ending in the selected suffix will automatically generate <b style="color:var(--accent)">4 slots</b> (FQDN-upper, short-upper, FQDN-lower, short-lower) per host, and 6 slots if mixed-case.
+    Hostnames <em>not</em> in your FQDN Registry — type the domain suffix above and it will be applied.
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-gen" onclick="generate()">&#9658; GENERATE</button>
+    <button class="btn btn-secondary btn-sm" onclick="clearGenerator()">Clear</button>
+  </div>
+  <div id="g-outputCard" style="display:none;margin-top:16px;">
+    <div class="card">
+      <div class="output-header">
+        <div class="card-title" style="margin:0">Generated Queries</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="copy-btn" id="g-copyBtn" onclick="copyActiveTab()">Copy Tab</button>
+          <button class="btn btn-validate btn-sm" onclick="validateGenerated()">&#9672; Validate</button>
+        </div>
+      </div>
+      <div id="g-statsBar" class="stats-bar"></div>
+      <div class="query-edit-hint">&#9998; Query text below is editable &mdash; click into any box to customize or extend it before copying.</div>
+      <div class="tab-bar" id="g-tabBar">
+        <button class="tab-btn active" data-tab="combined" onclick="switchTab('combined')"><span class="dot"></span>Combined</button>
+        <button class="tab-btn" data-tab="upper" onclick="switchTab('upper')"><span class="dot"></span>Upper</button>
+        <button class="tab-btn" data-tab="lower" onclick="switchTab('lower')"><span class="dot"></span>Lower</button>
+        <button class="tab-btn" data-tab="ips" onclick="switchTab('ips')"><span class="dot"></span>IPs</button>
+      </div>
+      <div class="tab-panel active" id="gpanel-combined"></div>
+      <div class="tab-panel" id="gpanel-upper"></div>
+      <div class="tab-panel" id="gpanel-lower"></div>
+      <div class="tab-panel" id="gpanel-ips"></div>
+    </div>
+  </div>
+  <div id="inline-val-anchor"></div>
+</div>
+
+<!-- VALIDATOR -->
+<div class="page" id="page-val">
+  <div class="page-header">
+    <div class="ph-icon ph-icon-val">VAL</div>
+    <div><div class="ph-title ph-title-val">Validator</div><div class="ph-sub">// CHECK FORMAT &middot; SPACES &middot; CLIENT NAMES</div></div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div class="card-title amber" style="margin:0">Paste Scripts</div>
+      <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font:600 9px var(--display);color:var(--purple);letter-spacing:1px;text-transform:uppercase;user-select:none;">
+        <div class="adv-toggle" id="adv-toggle" onclick="toggleAdvancedVal()">
+          <div class="adv-toggle-knob" id="adv-toggle-knob"></div>
+        </div>
+        Advanced Mode
+      </label>
+    </div>
+    <div class="form-group" style="margin-bottom:14px;max-width:280px;">
+      <div class="form-label">Query Format</div>
+      <select id="v-format-select" style="font-size:11px;"></select>
+    </div>
+    <textarea id="v-input" rows="9" placeholder="(`External id` = &quot;Client&quot;) AND (`Source` IN(&quot;HOST1&quot;,&quot;HOST2&quot;))&#10;&#8212; one script per line &#8212;"></textarea>
+    <div class="hint" style="margin-top:8px;">One per line. <span class="kbd">Ctrl</span>+<span class="kbd">Enter</span> to run.</div>
+    <div class="btn-row">
+      <button class="btn btn-validate" onclick="runValidation('standalone')">&#9672; VALIDATE</button>
+      <button class="btn btn-secondary btn-sm" onclick="loadSample()">Load Sample</button>
+      <button class="btn btn-secondary btn-sm" onclick="clearValInput()">Clear</button>
+    </div>
+  </div>
+  <div id="standalone-val-anchor"></div>
+</div>
+
+<!-- ADVANCED VALIDATOR (hidden panel, toggled into view) -->
+<div class="page" id="page-adv-val">
+  <div class="page-header" style="justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div class="ph-icon ph-icon-val" style="background:var(--purple-dim);border-color:var(--purple);">ADV</div>
+      <div>
+        <div class="ph-title" style="color:var(--purple);">Advanced Validator</div>
+        <div class="ph-sub">// HOST COVERAGE &middot; CLIENT MATCH &middot; COMPLETENESS CHECK</div>
+      </div>
+    </div>
+    <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font:600 9px var(--display);color:var(--purple);letter-spacing:1px;text-transform:uppercase;user-select:none;">
+      <div class="adv-toggle on" id="adv-toggle-2" onclick="toggleAdvancedVal()">
+        <div class="adv-toggle-knob"></div>
+      </div>
+      Advanced Mode
+    </label>
+  </div>
+  <div class="card">
+    <div class="card-title purple">Validation Context</div>
+    <div class="form-row" style="grid-template-columns:1fr 1fr 1fr;gap:14px;">
+      <div class="form-group">
+        <div class="form-label">Expected Client Name</div>
+        <select id="adv-client"><option value="" disabled selected>&#8212; SELECT CLIENT &#8212;</option></select>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Mode</div>
+        <select id="adv-mode">
+          <option value="all">All hosts must appear</option>
+          <option value="any">At least one host must appear</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <div class="form-label">Query Format</div>
+        <select id="adv-format-select" style="font-size:11px;"></select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:12px;">
+      <div class="form-label">Expected Hostnames &amp; IPs — one per line</div>
+      <textarea id="adv-hosts" rows="5" placeholder="SERVER01&#10;192.168.1.10&#10;web01.corp.local.com" style="min-height:100px;"></textarea>
+    </div>
+    <div class="form-group">
+      <div class="form-label">Scripts to Validate — one per line</div>
+      <textarea id="adv-scripts" rows="7" placeholder="(`External id` = &quot;Client&quot;) AND (`Source` IN(&quot;HOST1&quot;,&quot;HOST2&quot;))"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-validate" style="border-color:var(--purple);color:var(--purple);" onclick="runAdvancedValidation()">&#9672; RUN ADVANCED CHECK</button>
+      <button class="btn btn-secondary btn-sm" onclick="clearAdvVal()">Clear</button>
+    </div>
+  </div>
+  <div id="adv-val-anchor"></div>
+</div>
+
+<!-- BULK UPLOAD -->
+<div class="page" id="page-bulk">
+  <div class="page-header">
+    <div class="ph-icon ph-icon-bulk">BSC</div>
+    <div><div class="ph-title ph-title-bulk">Bulk Script Creation</div><div class="ph-sub">// UPLOAD &middot; VALIDATE &middot; GROUP &middot; GENERATE &middot; EXPORT</div></div>
+  </div>
+
+  <!-- Config card -->
+  <div class="card">
+    <div class="card-title cyan">Configure</div>
+    <div class="form-row" style="grid-template-columns:1fr 1fr 1fr;gap:14px;">
+      <div class="form-group"><div class="form-label">Client Name</div><select id="bulk-client"><option value="" disabled selected>&#8212; SELECT CLIENT &#8212;</option></select></div>
+      <div class="form-group"><div class="form-label">Max Slots / Query</div><select id="bulk-max-slots"><option value="10" selected>10 Slots</option><option value="20">20 Slots</option><option value="30">30 Slots</option><option value="40">40 Slots</option><option value="50">50 Slots</option></select></div>
+      <div class="form-group"><div class="form-label">Max Duration (hrs)</div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <input type="text" id="bulk-max-dur" value="0" style="width:62px;padding:6px 8px;font-size:12px;"/>
+          <span style="font:500 10px var(--mono);color:var(--text3)">0=&#8734;</span>
+        </div>
+      </div>
+    </div>
+    <div class="form-row" id="bulk-format-row" style="grid-template-columns:1fr;gap:14px;margin-bottom:0;">
+      <div class="form-group" style="max-width:280px;">
+        <div class="form-label">Query Format</div>
+        <select id="bulk-format-select" style="font-size:11px;"></select>
+      </div>
+      <div class="form-group" id="bulk-desc-group" style="display:none;">
+        <div class="form-label">Description Filter <span style="color:var(--text4)">(suppresses alerts matching both Source &amp; Description)</span></div>
+        <input type="text" id="bulk-description" placeholder="e.g. Disk space warning" style="font-size:11px;"/>
+      </div>
+    </div>
+
+    <!-- Timing override row — shown for Basic template -->
+    <div id="bulk-timing-override" style="display:none;margin-top:2px;padding:10px 14px;background:var(--surface2);border:1px solid var(--amber-border);border-radius:var(--radius);">
+      <div style="font:700 8px var(--display);color:var(--amber);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;">Basic template — optionally enter a timing window (leave blank to skip):</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+        <div class="form-group" style="min-width:140px;"><div class="form-label">Start Date &amp; Time</div><input type="text" id="bulk-default-start" placeholder="01-Jan-2026 08:00 AM" style="font-size:11px;padding:6px 10px;"/></div>
+        <div class="form-group" style="min-width:140px;"><div class="form-label">End Date &amp; Time</div><input type="text" id="bulk-default-end" placeholder="01-Jan-2026 12:00 PM" style="font-size:11px;padding:6px 10px;"/></div>
+        <div style="font:500 10px var(--mono);color:var(--text3);padding-bottom:6px;">Applied to all rows</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload card -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div class="card-title cyan" style="margin:0">Upload File</div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-secondary btn-sm" onclick="bulkDownloadTemplate('basic')">&#8681; Template A (Basic)</button>
+        <button class="btn btn-secondary btn-sm" onclick="bulkDownloadTemplate('advanced')">&#8681; Template B (Advanced)</button>
+      </div>
+    </div>
+    <div style="font:500 10px var(--mono);color:var(--text3);margin-bottom:10px;line-height:1.9;">
+      <b style="color:var(--accent2)">Template A (Basic):</b> HostName, IPAddress &nbsp;&middot;&nbsp; No schedule &mdash; use timing override above<br>
+      <b style="color:var(--cyan)">Template B (Advanced):</b> HostName, IPAddress, StartDate, StartTime, EndDate, EndTime, ClientName
+    </div>
+    <div class="drop-zone" id="bulkDropZone">
+      <input type="file" id="bulkFileInput" accept=".xlsx,.xls,.csv" onchange="bulkHandleFile(this.files[0])"/>
+      <span class="drop-icon">&#8679;</span>
+      <div class="drop-text">Drop file here or click to browse</div>
+      <div class="drop-sub">.xlsx / .xls / .csv &nbsp;&middot;&nbsp; Max 10 MB &nbsp;&middot;&nbsp; Max 10,000 rows</div>
+    </div>
+    <div id="bulk-upload-status" style="display:none"></div>
+
+    <div id="bulk-progress-wrap" style="display:none;margin-top:12px;">
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="bulk-prog-bar"></div></div>
+      <div class="progress-label" id="bulk-prog-label">READY...</div>
+    </div>
+
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn btn-cyan" onclick="bulkGenerate()">&#9647; GENERATE SCRIPTS</button>
+      <button class="btn btn-secondary btn-sm" onclick="bulkReset()">Reset</button>
+    </div>
+  </div>
+
+  <!-- Debug mode toggle -->
+  <div style="display:flex;align-items:center;gap:8px;margin:-6px 0 4px;padding:0 2px;">
+    <input type="checkbox" id="bulk-debug-mode" style="cursor:pointer;accent-color:var(--accent)"/>
+    <label for="bulk-debug-mode" style="font:500 10px var(--mono);color:var(--text3);cursor:pointer;letter-spacing:.05em;">Debug mode (show parse decisions)</label>
+  </div>
+
+  <!-- Grouping decision panel — filled after parse -->
+  <div id="bulk-grouping-anchor"></div>
+
+  <!-- Parsed data preview -->
+  <div id="bulk-preview-anchor"></div>
+
+  <!-- Validation report (collapsible) -->
+  <div id="bulk-val-anchor"></div>
+
+  <!-- Generated output (highlighted after generate) -->
+  <div id="bulk-output-anchor"></div>
+</div>
+
+<!-- FQDN REGISTRY -->
+<div class="page" id="page-fqdn">
+  <div class="page-header">
+    <div class="ph-icon ph-icon-fqdn">DNS</div>
+    <div><div class="ph-title ph-title-fqdn">FQDN Registry</div><div class="ph-sub">// DOMAIN SUFFIXES &middot; GENERATOR LOOKUP</div></div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div class="card-title cyan" style="margin:0">Registered Suffixes</div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('import-fqdn').click()">&#8679; Import</button>
+        <button class="btn btn-secondary btn-sm" onclick="exportFqdn()">&#8681; Export</button>
+        <input type="file" id="import-fqdn" accept=".csv,.txt" style="display:none" onchange="importFqdn(event)">
+      </div>
+    </div>
+    <div class="client-grid" id="fqdnGrid"></div>
+    <div class="client-add-row">
+      <input type="text" id="fqdnInput" placeholder=".corp.local.com" maxlength="100" style="width:250px;"/>
+      <button class="btn btn-secondary btn-sm" onclick="addFqdn()">+ Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLIENT REGISTRY -->
+<div class="page" id="page-clients">
+  <div class="page-header">
+    <div class="ph-icon ph-icon-cli">CLI</div>
+    <div><div class="ph-title ph-title-cli">Client Registry</div><div class="ph-sub">// REGISTERED ACCOUNTS &middot; VALIDATOR LOOKUP</div></div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+      <div class="card-title purple" style="margin:0">Registered Clients</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('import-clients').click()">&#8679; Import</button>
+        <button class="btn btn-secondary btn-sm" onclick="exportClients()">&#8681; Export</button>
+        <button class="btn btn-secondary btn-sm" onclick="backupClientsNow()" title="Download a JSON snapshot of your client list">&#128190; Backup Now</button>
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('restore-clients').click()" title="Restore clients from a backup JSON file">&#8634; Restore</button>
+        <input type="file" id="import-clients" accept=".csv,.txt" style="display:none" onchange="importClients(event)">
+        <input type="file" id="restore-clients" accept=".json" style="display:none" onchange="restoreClientsFromFile(event)">
+      </div>
+    </div>
+    <div class="client-grid" id="clientGrid"></div>
+    <div class="client-add-row">
+      <input type="text" id="clientInput" placeholder="Add client name&#8230;" maxlength="60" style="width:210px;"/>
+      <button class="btn btn-secondary btn-sm" onclick="addClient()">+ Add</button>
+    </div>
+    <div class="divider"></div>
+    <div style="font:500 8px var(--display);color:var(--text3);margin-bottom:8px;letter-spacing:1.5px;text-transform:uppercase;">Expected Format</div>
+    <div class="fmt-preview"><span class="fmt-op">(</span><span class="fmt-key">`External id`</span><span class="fmt-op"> = </span><span class="fmt-val">"ClientName"</span><span class="fmt-op">) AND (</span><span class="fmt-key">`Source`</span><span class="fmt-op"> IN(</span><span class="fmt-val">"host1","host2"</span><span class="fmt-op">))</span></div>
+    <div class="import-info" style="margin-top:12px;">Client names here appear in the <code>Generator</code> and <code>Bulk Upload</code> dropdowns and are cross-referenced by the <code>Validator</code>. Import via CSV &mdash; one name per line. Clients persist permanently in browser storage and are never auto-cleared &mdash; an automatic backup snapshot is also kept on every change, and <code>Backup Now</code> lets you download a full JSON copy (clients + FQDN suffixes + query formats) at any time.</div>
+  </div>
+
+  <!-- Format Templates card -->
+  <div class="card">
+    <div class="card-title purple" style="margin-bottom:14px;">Query Format Templates</div>
+    <div style="font:500 10px var(--mono);color:var(--text3);margin-bottom:12px;line-height:1.9;">
+      Define custom query formats. Use <code style="background:var(--surface2);padding:1px 5px;border:1px solid var(--border);border-radius:2px;">{client}</code> for client name, <code style="background:var(--surface2);padding:1px 5px;border:1px solid var(--border);border-radius:2px;">{sources}</code> for host/IP list, and <code style="background:var(--surface2);padding:1px 5px;border:1px solid var(--border);border-radius:2px;">{description}</code> for an optional description filter.
+    </div>
+    <div id="format-list" style="display:flex;flex-direction:column;gap:7px;margin-bottom:12px;"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
+      <div class="form-group" style="min-width:140px;flex:0 0 auto;">
+        <div class="form-label">Format Name</div>
+        <input type="text" id="fmt-name-input" placeholder="e.g. My Format" style="width:150px;"/>
+      </div>
+      <div class="form-group" style="flex:1;min-width:220px;">
+        <div class="form-label">Template</div>
+        <input type="text" id="fmt-tpl-input" placeholder='(`External id` = "{client}") AND (`Source` IN({sources}))'/>
+      </div>
+      <button class="btn btn-secondary btn-sm" style="align-self:flex-end;" onclick="addQueryFormat()">+ Add</button>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- HISTORY MODAL -->
+<div class="modal-overlay" id="histModal" onclick="onModalOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">// SESSION HISTORY</div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary btn-sm" onclick="clearAllHistory()" style="font-size:7px;padding:4px 8px;">CLEAR ALL</button>
+        <div class="modal-close" onclick="closeHistory()" role="button" tabindex="0" aria-label="Close" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();closeHistory();}">&#10005;</div>
+      </div>
+    </div>
+    <div class="modal-body" id="histBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
